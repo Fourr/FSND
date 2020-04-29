@@ -4,18 +4,18 @@ from sqlalchemy import Column, String, Integer, create_engine
 from flask_sqlalchemy import SQLAlchemy
 import json
 
-
-database_path = os.environ.get('DATABASE_URL')
+database_path = 'postgres://iegqbkuxwfvlyx:86b85be0622cb66b45a2a7f5ce775642d455431a8fb3c7a4e62f576cc4061ff1@ec2-3-229-210-93.compute-1.amazonaws.com:5432/d9ddjavkel9st9'
+#database_path = os.environ.get('DATABASE_URL')
 if not database_path:
     database_name = "capstone"
     database_path = "postgres://{}/{}".format('localhost:5432', database_name)
 
 db = SQLAlchemy()
 
-'''
-setup_db(app)
-    binds a flask application and a SQLAlchemy service
-'''
+
+
+    #binds a flask application and a SQLAlchemy service
+
 def setup_db(app, database_path=database_path):
     app.config.from_object('config')
     db.app = app
