@@ -17,9 +17,17 @@ def create_app(test_config=None):
         response.headers.add('Access-Control-Allow_Methods', 'GET,PUT,POST,DELETE,OPTIONS')
         return response
 
+    @app.route('/')
+    def get_greeting():
+        excited = os.environ['EXCITED']
+        greeting = "Hello" 
+        if excited == 'true': greeting = greeting + "!!!!!"
+        return greeting
     @app.route('/actors', methods=["GET"])
     def get_actors():
         actors = Actor.query.all()
+        if not actors:
+            abort(400, {"message:" "Could not query actors"})
         all_results = [result.format() for result in actors]
 
         if len(actors) == 0:
@@ -31,6 +39,8 @@ def create_app(test_config=None):
     @app.route('/movies', methods=["GET"])
     def get_movies():
         movies = Movie.query.all()
+        if not movies:
+            abort(400, {"message:" "Could not query movies"})
         all_results = [result.format() for result in movies]
         if len(movies) == 0:
             abort(404, {"message": "No movies currently"})
@@ -132,5 +142,5 @@ app = create_app()
 
 if __name__ == '__main__':
     #port = init(os.environ.get("PORT", 5432))
-    #app.run(host='127.0.0.1', port=port)
-    app.run(host='0.0.0.0', debug=True)
+    app.run(host='0.0.0.0', port=8080, debug=True)
+    #app.run(host='0.0.0.0', debug=True)
