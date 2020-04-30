@@ -1,8 +1,9 @@
+#heroku run python manage.py db upgrade --directory app/migrations --app sheffercapstone
 import os
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-#from auth import AuthError, requires_auth
+from auth import AuthError, requires_auth
 from models import setup_db, Actor, Movie
 
 def create_app(test_config=None):
@@ -19,13 +20,11 @@ def create_app(test_config=None):
 
     @app.route('/')
     def get_greeting():
-        excited = os.environ['EXCITED']
-        greeting = "Hello" 
-        if excited == 'true': greeting = greeting + "!!!!!"
-        return greeting
+        return "Hello" 
+
     @app.route('/actors', methods=["GET"])
-    #@requires_auth('get:actors')
-    def get_actors():
+    @requires_auth('get:actors')
+    def get_actors(token):
         actors = Actor.query.all()
         if not actors:
             abort(400, {"message:" "Could not query actors"})
@@ -38,7 +37,8 @@ def create_app(test_config=None):
         return jsonify({"success": True, "actors": all_results}), 200
 
     @app.route('/movies', methods=["GET"])
-    def get_movies():
+    @requires_auth('get:movies')
+    def get_movies(token):
         movies = Movie.query.all()
         if not movies:
             abort(400, {"message:" "Could not query movies"})
@@ -48,7 +48,8 @@ def create_app(test_config=None):
         return jsonify({"success": True, "movies": all_results}), 200
 
     @app.route('/actors', methods=['POST'])
-    def add_actor():
+    @requires_auth('post:actors')
+    def add_actor(token):
         data = request.get_json()
         print(request)
         if not data:
@@ -62,7 +63,8 @@ def create_app(test_config=None):
         return jsonify({"success": True, "actor": new_actor.id}), 200
 
     @app.route("/movies", methods=['POST'])
-    def add_movie():
+    @requires_auth('post:movies')
+    def add_movie(token):
 
         data = request.get_json()
         if not data:
@@ -75,10 +77,13 @@ def create_app(test_config=None):
 
         return jsonify({"success": True, "movie": new_movie.id}), 200
 
-    @app.route("/actors/<int:actor_id>", methods=["PATCH"])
-    #@requires_auth("modify:actor")
-    def modify_actor(actor_id):
+    @app.route("/actors/<int:id>", methods=["PATCH"])
+    @requires_auth('patch:actors')
+    def modify_actor(token):
 
+        actor_id_place = request.url.find('/actors/') + 8
+
+        actor_id = int(request.url[actor_id_place:])
 
         try:
             actor = Actor.query.filter(Actor.id == actor_id).one_or_none()
@@ -89,18 +94,23 @@ def create_app(test_config=None):
             actor.gender = body.get('gender', actor.gender)
             actor.update()
             return jsonify({"success": True, "actor_id": actor.id}), 200
-        #except AuthError:
-        #    abort()
+        # except AuthError:
+        #     abort()
         except:
             if not actor: abort(404)
             abort(422)
 
-    @app.route("/movies/<int:movie_id>", methods=["PATCH"])
-    #@requires_auth("modify:movie")
-    def modify_movie(movie_id):
+    @app.route("/movies/<int:id>", methods=["PATCH"])
+    @requires_auth('patch:movies')
+    def modify_movie(token):
+
+        movie_id_place = request.url.find('/movies/') + 8
+
+        movie_id = int(request.url[movie_id_place:])
 
         try:
             movie = Movie.query.filter(Movie.id == movie_id).one_or_none()
+
             if not movie : raise
             body = request.get_json()
             movie.title = body.get('title', movie.title)
@@ -114,10 +124,13 @@ def create_app(test_config=None):
             if not movie: abort(404)
             abort(422)
 
-    @app.route("/actors/<int:actor_id>", methods=["DELETE"])
-    #@requires_auth("delete:actor")
-    def delete_actor(actor_id):
+    @app.route("/actors/<int:id>", methods=["DELETE"])
+    @requires_auth("delete:actors")
+    def delete_actor(token):
 
+        actor_id_place = request.url.find('/actors/') + 8
+
+        actor_id = int(request.url[actor_id_place:])
         actor = Actor.query.get(actor_id)
         if not actor:
             abort(404, {"message": "This actor does not exist"})
@@ -125,10 +138,15 @@ def create_app(test_config=None):
 
         return jsonify({"success": True, "actor": actor.id}), 200
 
-    @app.route("/movies/<int:movie_id>", methods=["DELETE"])
-    #@requires_auth("delete:movie")
-    def delete_movie(movie_id):
+    @app.route("/movies/<int:id>", methods=["DELETE"])
+    @requires_auth("delete:movies")
+    def delete_movie(token):
+        print("here")
+        movie_id_place = request.url.find('/movies/') + 8
 
+        movie_id = int(request.url[movie_id_place:])
+        print("movie_id")
+        print(movie_id)
         movie = Movie.query.get(movie_id)
         if not movie:
             abort(404, {"message": "This movie does not exist"})
@@ -137,8 +155,48 @@ def create_app(test_config=None):
         return jsonify({"success": True, "movie": movie.id}), 200
 
 
-    return app
+    
+    @app.errorhandler(422)
+    def unprocessable(error):
+        return jsonify({
+            "success": False, 
+            "error": 422,
+            "message": "unprocessable"
+            }), 422
 
+    @app.errorhandler(404)
+    def resourceNotFound(error):
+        return jsonify({
+            "success": False, 
+            "error": 404,
+            "message": "resource not found"
+            }), 404
+
+    @app.errorhandler(400)
+    def bad_request(error):
+        return jsonify({
+                "success": False,
+                "error": 400,
+                "message": "bad request",
+                }),400
+
+    @app.errorhandler(403)
+    def no_permission(error):
+        return jsonify({
+                "success": False,
+                "error": 403,
+                "message": "no_permission",
+                }),403
+
+    @app.errorhandler(401)
+    def unauthorized(error):
+        return jsonify({
+                "success": False,
+                "error": 401,
+                "message": "unauthorized",
+                }),401
+
+    return app
 app = create_app()
 
 if __name__ == '__main__':
