@@ -22,13 +22,11 @@ class AuthError(Exception):
 def get_token_auth_header():
     """Obtains the Access Token from the Authorization Header
     """
-    print("wtf am i not getting here")
     auth = request.headers.get('Authorization', None)
     if not auth:
         abort(401)
 
     parts = auth.split()
-    print("here again")
     if parts[0].lower() != 'bearer':
         abort(401)
 
@@ -39,20 +37,16 @@ def get_token_auth_header():
         abort(401)
 
     token = parts[1]
-    #print(token)
     return token
 
 
 def verify_decode_jwt(token):
-    print("in veriflaksdjflkjasy")
     jsonurl = urlopen(f'https://{AUTH0_DOMAIN}/.well-known/jwks.json')
     #jsonurl = urlopen(f'https://jonsheffer.auth0.com/.well-known/jwks.json')
-    print(jsonurl)
     jwks = json.loads(jsonurl.read())
     unverified_header = jwt.get_unverified_header(token)
     rsa_key = {}
     
-    print("in verify2")
     if 'kid' not in unverified_header:
         raise AuthError({
             'code': 'invalid_header',
@@ -102,13 +96,9 @@ def verify_decode_jwt(token):
 
 def check_permissions(permission, payload):
     if 'permissions' not in payload:
-        print("made it here")
         abort(400)
     if permission not in payload['permissions']:
-        print(permission)
-        print("made it here2")
         abort(403)
-    print("made it here3")
     return True
 
 def requires_auth(permission=''):
@@ -116,15 +106,11 @@ def requires_auth(permission=''):
         @wraps(f)
         def wrapper(*args, **kwargs):
             token = get_token_auth_header()
-            print("in wrapper")
             try:
-                print("in try??222?")
                 payload = verify_decode_jwt(token)
-                print("after verify")
             except:
                 abort(401)
             check_permissions(permission, payload)
-            print("after permissions")
             if(kwargs.get('id')):
                 return f(kwargs.get('id'))
             else:

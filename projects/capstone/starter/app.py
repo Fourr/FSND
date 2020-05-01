@@ -51,7 +51,6 @@ def create_app(test_config=None):
     @requires_auth('post:actors')
     def add_actor(token):
         data = request.get_json()
-        print(request)
         if not data:
             abort(400, {"message:" "JSON body is empty"})
         name = data.get("name")
@@ -60,7 +59,7 @@ def create_app(test_config=None):
         new_actor = Actor(name = name, age = age, gender = gender)
         new_actor.insert()
 
-        return jsonify({"success": True, "actor": new_actor.id}), 200
+        return jsonify({"success": True, "actor_id": new_actor.id}), 200
 
     @app.route("/movies", methods=['POST'])
     @requires_auth('post:movies')
@@ -75,7 +74,7 @@ def create_app(test_config=None):
         new_movie = Movie(title = title, release_date = release_date)
         new_movie.insert()
 
-        return jsonify({"success": True, "movie": new_movie.id}), 200
+        return jsonify({"success": True, "movie_id": new_movie.id}), 200
 
     @app.route("/actors/<int:id>", methods=["PATCH"])
     @requires_auth('patch:actors')
@@ -115,9 +114,8 @@ def create_app(test_config=None):
             body = request.get_json()
             movie.title = body.get('title', movie.title)
             movie.release_date = body.get('release_date', movie.release_date)
-            print(movie.release_date)
             movie.update()
-            return jsonify({"success": True, "movie": movie.id}), 200
+            return jsonify({"success": True, "movie_id": movie.id}), 200
         #except AuthError:
         #    abort()
         except:
@@ -136,23 +134,21 @@ def create_app(test_config=None):
             abort(404, {"message": "This actor does not exist"})
         actor.delete()
 
-        return jsonify({"success": True, "actor": actor.id}), 200
+        return jsonify({"success": True, "actor_id": actor.id}), 200
 
     @app.route("/movies/<int:id>", methods=["DELETE"])
     @requires_auth("delete:movies")
     def delete_movie(token):
-        print("here")
         movie_id_place = request.url.find('/movies/') + 8
 
         movie_id = int(request.url[movie_id_place:])
-        print("movie_id")
-        print(movie_id)
+
         movie = Movie.query.get(movie_id)
         if not movie:
             abort(404, {"message": "This movie does not exist"})
         movie.delete()
 
-        return jsonify({"success": True, "movie": movie.id}), 200
+        return jsonify({"success": True, "movie_id": movie.id}), 200
 
 
     

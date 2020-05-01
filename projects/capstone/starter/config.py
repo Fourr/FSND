@@ -11,3 +11,9 @@ SQLALCHEMY_DATABASE_URI = 'postgres://iegqbkuxwfvlyx:86b85be0622cb66b45a2a7f5ce7
 #SQLALCHEMY_DATABASE_URI = 'postgres://johnnysheffer@localhost:5432/capstone'
 
 SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+bearer_tokens = {
+    "casting_assistant": "Bearer ",
+    "casting_director": "Bearer ",
+    "executive_producer": "Bearer ",
+}

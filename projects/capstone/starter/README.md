@@ -38,8 +38,7 @@ database_path = "postgres://{}:{}@{}/{}".format(<user-name>,'<password>','localh
  - Define role: Casting Director and Casting Producer 
  - Give permissions to the roles
 
-6. ```export FLASK_APP=app.py
-	export FLASK_ENV=development```
+6. ```export FLASK_APP=app.py export FLASK_ENV=development```
 7. Now start local development server
 ```flask run ```
 
@@ -85,6 +84,14 @@ All the endpoints and routes of this app have been explained here:
   "success": true
 }
 ```
+- If request is sent without required permission ```delete:actors```
+- Gives following response:
+```
+{
+  "error": 403,
+  "message": "no_permission",
+  "success": false
+}
 
 ### GET /movies
 - Returns a list of all movies and details : title and release_date.
@@ -107,6 +114,14 @@ All the endpoints and routes of this app have been explained here:
   "success": true
 }
 ```
+- If request is sent without required permission ```get:movies```
+- Gives following response:
+```
+{
+  "error": 403,
+  "message": "no_permission",
+  "success": false
+}
 ### POST /actors
 - Add a new actor in the database and return success and the id of newly created record.
 - Send following json in the body:
@@ -242,6 +257,14 @@ https://sheffercapstone.herokuapp.com/actors/1
   "success": true
 }
 ```
+- If request is sent without required permission ```delete:actors```
+- Gives following response:
+```
+{
+  "error": 403,
+  "message": "no_permission",
+  "success": false
+}
 
 ### DELETE /movies/<movie_id>
 - Deletes the given movie record and return success message with the of deleted movie.
@@ -257,3 +280,11 @@ https://sheffercapstone.herokuapp.com/movies/1
   "success": true
 }
 ```
+- If request is sent without required permission ```delete:movies```
+- Gives following response:
+```
+{
+  "error": 403,
+  "message": "no_permission",
+  "success": false
+}
